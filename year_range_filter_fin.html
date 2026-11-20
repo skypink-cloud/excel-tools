@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>연도별 엑셀 추출기 · 대표도면 이미지 보존</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fb;font-family:system-ui,"Malgun Gothic",sans-serif;color:#18263d;padding:30px 15px}
+main{max-width:1060px;margin:auto}h1{margin:0;font-size:29px}h2{font-size:18px;margin:0 0 17px}p{color:#64748b;line-height:1.65}
+.card{background:#fff;border:1px solid #e3e9f1;border-radius:17px;padding:22px;margin:17px 0;box-shadow:0 6px 25px #0f172a07}
+.drop{border:2px dashed #9eb5d9;background:#f8fbff;padding:30px;text-align:center;border-radius:12px;cursor:pointer}
+.drop.drag{border-color:#1d63dc;background:#e8f2ff}.drop b{display:block;margin-bottom:7px}
+button{background:#2459d3;border:0;color:white;border-radius:9px;padding:11px 16px;cursor:pointer;font-size:14px;font-weight:700}
+button:disabled{opacity:.45;cursor:not-allowed}.light{background:#e9effb;color:#25436d}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:17px}
+label{font-weight:700;display:block;margin-bottom:7px;font-size:14px}
+select,input[type=text]{width:100%;padding:11px;border:1px solid #ccd5e1;border-radius:9px;background:#fff;font-size:14px}
+#years{display:flex;flex-wrap:wrap;gap:9px;margin:10px 0 16px}.rangebar{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;padding:15px;background:#f5f8fd;border-radius:12px;margin:16px 0}.rangebar input,.rangebar select{width:100%;border:1px solid #ccd5e1;border-radius:9px;padding:10px;background:white;font-size:14px}.rangebar button{align-self:end}.rangehint{font-size:13px;color:#53657e;margin:4px 0 10px}
+.year{display:inline-flex;align-items:center;gap:7px;padding:10px 13px;border:1px solid #d7e0ed;border-radius:10px;cursor:pointer;background:white;font-weight:600}
+.year:has(input:checked){border-color:#2459d3;background:#eaf1ff;color:#1d4ed8}
+.year input{accent-color:#2459d3}
+.stats{display:flex;gap:12px;flex-wrap:wrap}.stat{background:#f1f6fd;border-radius:9px;padding:12px 16px}
+.stat strong{font-size:22px;display:block}.stat span{font-size:12px;color:#64748b}
+.tools{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px;align-items:center}
+.msg{min-height:24px;font-size:14px;margin-top:13px;color:#08754f}.msg.err{color:#c02626}
+.tablewrap{overflow:auto;max-height:430px;border:1px solid #e5eaf1;border-radius:10px;margin-top:15px}
+table{border-collapse:collapse;white-space:nowrap;font-size:13px;width:100%}th,td{padding:10px 12px;border-bottom:1px solid #e5eaf1;border-right:1px solid #eef2f8;text-align:left;max-width:290px;overflow:hidden;text-overflow:ellipsis}th{position:sticky;top:0;background:#eef4fc}
+small,.hint{color:#64748b}#fileinfo{margin-top:12px} .hidden{display:none!important}
+</style></head><body><main>
+<header><h1>📅 연도 범위·연도별 엑셀 데이터 추출기</h1><p>원하는 연도를 범위로 한 번에 선택하여 행을 추출하고, XLSX의 <b>대표도면 이미지</b>도 해당 행에 함께 저장합니다. 브라우저 내에서 처리하며 서버로 파일을 전송하지 않습니다.</p></header>
+<section class="card"><h2>1. 파일 업로드</h2><div class="drop" id="drop" role="button" tabindex="0"><b>CSV / XLSX 파일을 클릭하거나 여기로 끌어오세요</b><small>한 번에 파일 1개 · 원본의 첫 번째 워크시트 기준</small></div>
+<input id="file" type="file" accept=".xlsx,.csv" class="hidden"><div id="fileinfo" class="hint">아직 파일을 선택하지 않았습니다.</div></section>
+<section class="card"><h2>2. 연도 기준 열 및 추출 연도</h2>
+<div class="grid"><div><label for="column">기준 열</label><select id="column" disabled><option>먼저 파일을 업로드하세요</option></select></div>
+<div><label for="mode">다운로드 구성</label><select id="mode"><option value="combined">선택 연도를 한 파일로</option><option value="separate">연도별 파일 각각 · ZIP</option></select></div>
+<div><label for="format">다운로드 형식</label><select id="format"><option value="xlsx">Excel XLSX (이미지 포함)</option><option value="csv">CSV (이미지 제외)</option></select></div>
+<div><label for="filename">저장 파일명</label><input id="filename" type="text" value="연도별_추출결과"></div></div>
+<p class="hint" id="detect">기준 열을 선택하면 해당 열의 연도를 자동 검색합니다. 연도 범위로 한 번에 선택하거나 아래에서 개별 선택할 수 있습니다.</p>
+<div class="rangebar" aria-label="연도 범위 일괄 선택">
+<div><label for="fromYear">시작 연도</label><input type="number" id="fromYear" min="1900" max="2100" value="2018" placeholder="예: 2018"></div>
+<div><label for="fromRule">시작 연도 포함 여부</label><select id="fromRule"><option value="gte">부터 (2018년 포함)</option><option value="gt">이후 (2018년 제외)</option></select></div>
+<div><label for="toYear">마지막 연도 (선택)</label><input type="number" id="toYear" min="1900" max="2100" placeholder="비워두면 제한 없음"></div>
+<div><label for="toRule">마지막 연도 포함 여부</label><select id="toRule"><option value="lte">까지 (포함)</option><option value="lt">이전 (제외)</option></select></div>
+<button id="applyRange" type="button" disabled>이 범위의 연도 일괄 선택</button>
+</div>
+<p id="rangeSummary" class="rangehint">2018년부터 마지막 연도까지 선택하려면 마지막 연도를 비워두고 ‘이 범위의 연도 일괄 선택’을 누르세요.</p>
+<p class="rangehint"><b>연도별 개별 저장:</b> 위의 ‘다운로드 구성’에서 <b>연도별 파일 각각 · ZIP</b>을 선택하면 <code>2018년.xlsx</code>, <code>2019년.xlsx</code>처럼 파일이 분리되어 ZIP으로 다운로드됩니다.</p>
+<div class="tools"><button class="light" id="all" disabled>전체 선택</button><button class="light" id="none" disabled>전체 해제</button></div>
+<div id="years"><span class="hint">파일을 업로드하면 연도가 표시됩니다.</span></div>
+<div class="stats"><div class="stat"><strong id="count">0</strong><span>추출 행</span></div><div class="stat"><strong id="imgcount">0</strong><span>추출 그림</span></div><div class="stat"><strong id="total">0</strong><span>전체 데이터 행</span></div></div>
+<div class="tools"><button id="download" disabled>선택 연도 파일 다운로드</button></div><div id="status" class="msg" role="status" aria-live="polite"></div>
+</section>
+<section class="card"><h2>3. 추출 결과 미리보기</h2><p class="hint">최대 50행 표시. 이미지 위치에는 🖼️ 표식이 나타납니다. 실제 사진은 XLSX 다운로드 파일에 포함됩니다.</p><div id="preview" class="tablewrap hidden"></div></section>
+<footer><p class="hint">참고: CSV 파일은 이미지를 담을 수 없습니다. XLSX는 원본 이미지의 위치와 크기를 최대한 유지하지만, 복잡한 병합 셀·차트·특수 개체 등의 원본 서식은 완전히 복제되지 않을 수 있습니다. 인터넷 연결이 필요합니다(CDN 라이브러리).</p></footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script>
+(()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+let state=null;
+function note(t,bad=false){$("status").textContent=t;$("status").className="msg"+(bad?" err":"")}
+function xml(data){return new DOMParser().parseFromString(data,"application/xml")}
+function elems(el,local){return Array.from(el?.getElementsByTagName("*")||[]).filter(x=>x.localName===local)}
+function direct(el,local){return Array.from(el?.children||[]).find(x=>x.localName===local)}
+function val(el,local){return direct(el,local)?.textContent||""}
+function prop(el,local,name){return direct(el,local)?.getAttribute(name)}
+function getRelTarget(base,target){
+ if(!target)return null;
+ if(target.startsWith("/"))return target.replace(/^\/+/,"");
+ const parts=base.split("/");parts.pop();
+ for(const seg of target.split("/")){if(seg==="..")parts.pop();else if(seg!==".")parts.push(seg)}
+ return parts.join("/")
+}
+function excelColumn(addr){let s=(addr.match(/^[A-Z]+/i)||[""])[0].toUpperCase(),v=0;for(const ch of s)v=v*26+ch.charCodeAt(0)-64;return v-1}
+function fmtDate(v){
+ if(v instanceof Date)return v.getFullYear();
+ if(typeof v==="number"){
+  if(Number.isInteger(v)&&v>=1900&&v<=2100)return v;
+  if(v>20000&&v<100000){const d=XLSX.SSF.parse_date_code(v);return d?.y??null}
+ }
+ const s=String(v??"").trim();
+ if(!s)return null;
+ let m=s.match(/(?:^|[^\d])((?:19|20)\d{2})(?=[^\d]|$)/);
+ if(m)return +m[1];
+ if(/^\d{8}$/.test(s)){let y=+s.slice(0,4);return y>=1900&&y<=2100?y:null}
+ if(/^\d{5}(?:\.\d+)?$/.test(s)){let d=XLSX.SSF.parse_date_code(+s);if(d?.y>=1900&&d.y<=2100)return d.y}
+ return null
+}
+function imageExt(path){const ex=(path.split(".").pop()||"png").toLowerCase();return ex==="jpg"?"jpeg":ex}
+async function extractImages(zip){
+ const out=[];
+ // XLSX 관계 파일을 통해 첫 시트의 drawing 파일을 찾는다.
+ const ss=zip.file("xl/worksheets/sheet1.xml");
+ if(!ss)return out;
+ const sheet=xml(await ss.async("string"));
+ const drawingElems=elems(sheet,"drawing");
+ if(!drawingElems.length)return out;
+ const relDoc=zip.file("xl/worksheets/_rels/sheet1.xml.rels");
+ if(!relDoc)return out;
+ const relXml=xml(await relDoc.async("string"));
+ const rels=new Map(elems(relXml,"Relationship").map(e=>[e.getAttribute("Id"),e.getAttribute("Target")]));
+ for(const drawing of drawingElems){
+  const rid=drawing.getAttribute("r:id")||drawing.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id");
+  const path=getRelTarget("xl/worksheets/sheet1.xml",rels.get(rid));
+  if(!path||!zip.file(path))continue;
+  const drawingXml=xml(await zip.file(path).async("string"));
+  const relPath=path.replace(/([^/]+)$/,"_rels/$1.rels"),drels=new Map();
+  if(zip.file(relPath)){
+   const dr=xml(await zip.file(relPath).async("string"));
+   for(const r of elems(dr,"Relationship"))drels.set(r.getAttribute("Id"),r.getAttribute("Target"))
+  }
+  for(const anchor of Array.from(drawingXml.documentElement.children)){
+   if(!["oneCellAnchor","twoCellAnchor","absoluteAnchor"].includes(anchor.localName))continue;
+   const pic=direct(anchor,"pic");if(!pic)continue;
+   const from=direct(anchor,"from");if(!from)continue;
+   const row=+val(from,"row"),col=+val(from,"col");
+   const blip=elems(pic,"blip")[0];const embed=blip?.getAttribute("r:embed")||blip?.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","embed");
+   const media=getRelTarget(path,drels.get(embed));
+   if(!media||!zip.file(media))continue;
+   const extNode=direct(anchor,"ext")||elems(pic,"ext")[0];
+   const end=direct(anchor,"to");
+   let width=145,height=110;
+   if(extNode?.getAttribute("cx")){width=+extNode.getAttribute("cx")/9525;height=+extNode.getAttribute("cy")/9525}
+   else if(end){width=Math.max(70,(+val(end,"col")-col)*110);height=Math.max(45,(+val(end,"row")-row)*25)}
+   const data=await zip.file(media).async("uint8array");
+   out.push({row,col,width:Math.max(15,width),height:Math.max(15,height),data,extension:imageExt(media)});
+  }
+ }
+ return out
+}
+function getSheetData(ab,isCsv){
+ const book=XLSX.read(ab,{type:"array",cellDates:true,raw:true,cellNF:true});
+ const ws=book.Sheets[book.SheetNames[0]];
+ if(!ws)throw Error("첫 번째 시트를 읽지 못했습니다.");
+ const ref=XLSX.utils.decode_range(ws["!ref"]||"A1");
+ const cols=ref.e.c+1,headers=[];
+ for(let c=0;c<cols;c++){
+  const address=XLSX.utils.encode_cell({r:0,c});
+  const v=ws[address]?.w??ws[address]?.v;
+  headers.push(String(v??"").trim()||`열_${c+1}`)
+ }
+ const rows=[];
+ for(let r=1;r<=ref.e.r;r++){
+  const values=[];
+  for(let c=0;c<cols;c++){
+   const cell=ws[XLSX.utils.encode_cell({r,c})];
+   values.push(cell?.v instanceof Date?cell.v:(cell?.w??cell?.v??""))
+  }
+  if(values.some(v=>String(v??"").trim()!==""))rows.push({sourceRow:r,values});
+ }
+ return {headers,rows}
+}
+async function load(file){
+ if(!window.XLSX||!window.JSZip||!window.ExcelJS)throw Error("필요한 라이브러리를 가져오지 못했습니다. 인터넷 연결을 확인하세요.");
+ const ab=await file.arrayBuffer();
+ const data=getSheetData(ab,/\.csv$/i.test(file.name));
+ let images=[];
+ if(/\.xlsx$/i.test(file.name)){
+  const zip=await JSZip.loadAsync(ab);
+  images=await extractImages(zip);
+ }
+ return {...data,images,name:file.name}
+}
+function relevantColumns(headers){
+ return headers.map((h,i)=>({h,i,s:(/연도|년도|출원일|등록일|공개일|발행일|일자|날짜|date|year/i.test(h)?10:0)}))
+ .sort((a,b)=>b.s-a.s||a.i-b.i)
+}
+function chosen(){return new Set(Array.from(document.querySelectorAll("#years input:checked")).map(x=>+x.value))}
+function refreshYears(){
+ const c=+$("column").value,ys=new Map();
+ for(const row of state.rows){const y=fmtDate(row.values[c]);if(y>=1900&&y<=2100)ys.set(y,(ys.get(y)||0)+1)}
+ const years=Array.from(ys.keys()).sort((a,b)=>b-a);
+ $("years").replaceChildren();
+ if(!years.length)$("years").textContent="이 열에서 연도 값을 찾지 못했습니다. 다른 기준 열을 선택해 주세요.";
+ for(const year of years){
+  const label=document.createElement("label");label.className="year";
+  const cb=document.createElement("input");cb.type="checkbox";cb.value=year;cb.checked=true;cb.onchange=render;
+  label.append(cb,document.createTextNode(`${year}년 (${ys.get(year)}건)`));$("years").append(label)
+ }
+ $("all").disabled=$("none").disabled=$("applyRange").disabled=!years.length;
+ $("detect").textContent=years.length?`${years.length}개 연도를 찾았습니다. 원하는 연도를 선택하세요.`:"연도를 인식하지 못했습니다. 다른 열을 선택해 주세요.";
+ render()
+}
+function selectedRows(){if(!state)return[];const set=chosen(),c=+$("column").value;return state.rows.filter(r=>set.has(fmtDate(r.values[c])))}
+function selectedImages(rows){
+ const ids=new Set(rows.map(r=>r.sourceRow));
+ return state.images.filter(im=>ids.has(im.row))
+}
+function render(){
+ if(!state)return;
+ const rows=selectedRows(),images=selectedImages(rows);
+ $("total").textContent=state.rows.length.toLocaleString("ko-KR");
+ $("count").textContent=rows.length.toLocaleString("ko-KR");
+ $("imgcount").textContent=images.length.toLocaleString("ko-KR");
+ $("download").disabled=!rows.length;
+ const table=document.createElement("table"),head=document.createElement("thead"),tr=document.createElement("tr");
+ for(const h of state.headers){const th=document.createElement("th");th.textContent=h;tr.append(th)}head.append(tr);table.append(head);
+ const body=document.createElement("tbody");
+ const imageSet=new Set(images.map(i=>i.row+":"+i.col));
+ for(const row of rows.slice(0,50)){
+  const r=document.createElement("tr");
+  row.values.forEach((v,j)=>{const td=document.createElement("td");td.textContent=(v instanceof Date?v.toLocaleDateString("ko-KR"):String(v??""))+(imageSet.has(row.sourceRow+":"+j)?" 🖼️":"");r.append(td)});
+  body.append(r)
+ }
+ table.append(body);$("preview").replaceChildren(table);$("preview").classList.toggle("hidden",!rows.length)
+}
+async function readSelected(file){
+ $("download").disabled=true;note("엑셀 데이터와 대표도면을 분석하고 있습니다...");
+ try{
+  state=await load(file);
+  if(!state.headers.length)throw Error("열 이름이 없습니다.");
+  $("fileinfo").textContent=`${file.name} · 데이터 ${state.rows.length}행 · 이미지 ${state.images.length}개 발견`;
+  const columns=relevantColumns(state.headers);
+  $("column").replaceChildren();
+  for(const c of columns){const o=document.createElement("option");o.value=c.i;o.textContent=c.h;$("column").append(o)}
+  $("column").disabled=false;$("column").onchange=refreshYears;
+  refreshYears();note(`읽기 완료. 이미지 ${state.images.length}개를 확인했습니다.`);
+ }catch(err){state=null;$("fileinfo").textContent="파일을 읽지 못했습니다.";$("years").textContent="파일을 다시 선택해 주세요.";note(err.message||String(err),true)}
+}
+const picker=$("file"),drop=$("drop");
+drop.onclick=()=>picker.click();drop.onkeydown=e=>{if(["Enter"," "].includes(e.key)){e.preventDefault();picker.click()}};
+picker.onchange=()=>{if(picker.files[0])readSelected(picker.files[0]);picker.value=""};
+["dragenter","dragover"].forEach(k=>drop.addEventListener(k,e=>{e.preventDefault();drop.classList.add("drag")}));
+["dragleave","drop"].forEach(k=>drop.addEventListener(k,e=>{e.preventDefault();drop.classList.remove("drag")}));
+drop.addEventListener("drop",e=>{const f=Array.from(e.dataTransfer.files).find(f=>/\.(csv|xlsx)$/i.test(f.name));if(f)readSelected(f);else note("CSV 또는 XLSX 파일만 가능합니다.",true)});
+function syncRangeLabels(){
+ const value=$("fromYear").value.trim();
+ const year=/^\\d{4}$/.test(value)?value:"입력한 연도";
+ const rule=$("fromRule"),current=rule.value;
+ rule.replaceChildren();
+ for(const [v,t] of [["gte",`부터 (${year} 포함)`],["gt",`이후 (${year} 제외)`]]){
+  const op=document.createElement("option");op.value=v;op.textContent=t;rule.append(op)
+ }
+ rule.value=current;
+}
+$("fromYear").addEventListener("input",syncRangeLabels);
+syncRangeLabels();
+$("mode").addEventListener("change",()=>{
+ const zip=$("mode").value==="separate";
+ $("download").textContent=zip?"연도별 파일 ZIP 다운로드":"선택 연도 파일 다운로드";
+});
+$("applyRange").onclick=()=>{
+ const start=Number($("fromYear").value),endText=$("toYear").value.trim(),end=endText===""?null:Number(endText);
+ if(!$("fromYear").value.trim()||!Number.isInteger(start)||start<1900||start>2100){note("시작 연도를 1900~2100 사이의 숫자로 입력해 주세요.",true);return}
+ if(end!==null&&(!Number.isInteger(end)||end<1900||end>2100)){note("마지막 연도를 1900~2100 사이로 입력해 주세요.",true);return}
+ const minInclusive=$("fromRule").value==="gte",maxInclusive=$("toRule").value==="lte";
+ let count=0;
+ document.querySelectorAll("#years input").forEach(x=>{
+  const y=Number(x.value);
+  const pass=(minInclusive?y>=start:y>start)&&(end===null?true:maxInclusive?y<=end:y<end);
+  x.checked=pass;if(pass)count++;
+ });
+ $("rangeSummary").textContent=`범위 선택 적용: ${minInclusive?start+"년부터":start+"년 초과"}${end===null?"":maxInclusive?" ~ "+end+"년까지":" ~ "+end+"년 미만"} · ${count}개 연도 선택`;
+ render();
+ note(count?`연도 ${count}개를 한꺼번에 선택했습니다.`:"해당 범위에 포함된 연도가 없습니다. 범위를 확인해 주세요.",!count)
+};
+$("all").onclick=()=>{document.querySelectorAll("#years input").forEach(x=>x.checked=true);$("rangeSummary").textContent="모든 연도를 선택했습니다.";render()};
+$("none").onclick=()=>{document.querySelectorAll("#years input").forEach(x=>x.checked=false);$("rangeSummary").textContent="모든 연도를 해제했습니다.";render()};
+function saveBlob(blob,name){
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=name;document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),15000)
+}
+async function exportOne(rows,format){
+ if(format==="csv"){
+  const ws=XLSX.utils.aoa_to_sheet([state.headers,...rows.map(r=>r.values.map(v=>v instanceof Date?v.toLocaleDateString("sv-SE"):v))]);
+  const data="\uFEFF"+XLSX.utils.sheet_to_csv(ws);
+  return new Blob([data],{type:"text/csv;charset=utf-8"})
+ }
+ const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("연도 추출");
+ ws.addRow(state.headers);ws.getRow(1).font={bold:true};ws.getRow(1).height=28;
+ const dest=new Map(rows.map((r,i)=>[r.sourceRow,i+1])); // zero-based destination row index (header=0)
+ for(const row of rows)ws.addRow(row.values.map(v=>v instanceof Date?v.toISOString().slice(0,10):v??""));
+ ws.columns=state.headers.map(h=>({width:/도면|그림|사진|이미지/.test(h)?26:21}));
+ ws.views=[{state:"frozen",ySplit:1}];
+ for(const im of state.images){
+  const out=dest.get(im.row);if(out===undefined)continue;
+  if(!["png","jpeg","gif"].includes(im.extension))continue;
+  try{
+   const imageId=wb.addImage({buffer:im.data,extension:im.extension});
+   ws.addImage(imageId,{tl:{col:im.col,row:out},ext:{width:im.width,height:im.height},editAs:"oneCell"});
+   const excelRow=ws.getRow(out+1);
+   excelRow.height=Math.max(excelRow.height||15,im.height*0.75+8)
+  }catch(e){console.warn("이미지 저장 실패",e)}
+ }
+ return new Blob([await wb.xlsx.writeBuffer()],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})
+}
+$("download").onclick=async()=>{
+ const rows=selectedRows();if(!rows.length)return;
+ const format=$("format").value,mode=$("mode").value;
+ const prefix=($("filename").value.trim()||"연도별_추출결과").replace(/[\\/:*?"<>|]/g,"_");
+ const btn=$("download");btn.disabled=true;note("선택한 연도와 그림을 포함해 파일을 생성 중입니다...");
+ try{
+  if(mode==="combined"){
+   const years=Array.from(chosen()).sort((a,b)=>a-b);
+   const blob=await exportOne(rows,format);saveBlob(blob,`${prefix}_${years.length>1?years[0]+"~"+years[years.length-1]:years[0]+"년"}.${format}`);
+  }else{
+   const zip=new JSZip(),years=Array.from(chosen()).sort((a,b)=>a-b),column=+$("column").value;
+   for(const year of years){
+    const group=rows.filter(r=>fmtDate(r.values[column])===year);
+    if(!group.length)continue;
+    const blob=await exportOne(group,format);
+    zip.file(`${prefix}_${year}년.${format}`,await blob.arrayBuffer())
+   }
+   saveBlob(await zip.generateAsync({type:"blob"}),`${prefix}_${years[0]}년부터_연도별.zip`)
+  }
+  note(format==="csv"?"다운로드를 시작했습니다. CSV에는 이미지가 포함되지 않습니다.":"다운로드를 시작했습니다. 해당 행의 이미지를 XLSX에 포함했습니다.");
+ }catch(e){note("파일 생성 실패: "+(e.message||String(e)),true)}
+ finally{btn.disabled=!selectedRows().length}
+};
+})();
+</script></body></html>

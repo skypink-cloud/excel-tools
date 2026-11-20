@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Excel Studio | 엑셀 데이터 도구 모음</title>
+<style>
+:root{font-family:Pretendard,"Malgun Gothic",system-ui,-apple-system,sans-serif;color:#19263b;background:#f6f8fc}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 86% 5%,#dceafe 0,transparent 36%),#f6f8fc}
+.shell{max-width:1120px;margin:auto;padding:32px 22px 45px}
+nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:76px}
+.logo{font-size:17px;font-weight:850;letter-spacing:-.6px;display:flex;align-items:center;gap:10px}
+.logo-icon{display:grid;place-items:center;width:37px;height:37px;border-radius:11px;background:#1d63c9;color:#fff;font-size:19px}
+.nav-chip{border:1px solid #dbe4f2;background:#fff;color:#6b7a90;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:700}
+.hero{max-width:750px;margin-bottom:35px}
+.kicker{color:#1e61cc;font-size:13px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;margin:0 0 13px}
+h1{font-size:clamp(32px,4.7vw,53px);line-height:1.22;margin:0 0 16px;letter-spacing:-1.9px}
+.hero p{color:#61728b;font-size:16px;line-height:1.8;margin:0;max-width:630px;word-break:keep-all}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.tool{display:flex;flex-direction:column;padding:30px;min-height:345px;background:#fff;border:1px solid #e2e9f3;border-radius:22px;box-shadow:0 13px 40px #223c660a;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;color:inherit}
+.tool:hover,.tool:focus-visible{transform:translateY(-4px);box-shadow:0 20px 45px #234b8620;border-color:#9cbbef;outline:none}
+.tool-header{display:flex;justify-content:space-between;align-items:start;gap:15px;margin-bottom:24px}
+.pic{width:64px;height:64px;border-radius:19px;display:grid;place-items:center;background:#e7f1ff;color:#2563bb}
+.pic.green{background:#e5f7ec;color:#158149}
+.pic svg{width:32px;height:32px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linejoin:round;stroke-linecap:round}
+.tag{font-size:12px;font-weight:700;background:#f1f5fa;color:#5e7089;border-radius:999px;padding:7px 11px}
+.tool h2{font-size:25px;letter-spacing:-.65px;margin:0 0 13px}
+.tool p{margin:0;color:#65758c;line-height:1.75;font-size:15px;word-break:keep-all}
+.features{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 25px}
+.features span{background:#f5f8fc;border:1px solid #e9eef6;color:#52677f;padding:6px 10px;border-radius:7px;font-size:12px}
+.go{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:18px;border-top:1px solid #edf1f7;color:#205ed0;font-weight:800;font-size:15px}
+.tool:nth-child(2) .go{color:#168047}.arrow{font-size:23px;line-height:1}
+.bottom{margin-top:29px;padding:20px 23px;background:#eef4fc;border-radius:15px;color:#5c6f89;font-size:13px;line-height:1.8}
+.bottom strong{color:#273a53}footer{text-align:center;color:#8390a4;font-size:12px;margin-top:52px}
+@media(max-width:740px){.shell{padding:23px 16px 35px}nav{margin-bottom:48px}.grid{grid-template-columns:1fr}.tool{min-height:300px;padding:25px}h1{letter-spacing:-1px}.hero p{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.tool{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav><div class="logo"><span class="logo-icon" aria-hidden="true">▦</span> Excel Studio</div><span class="nav-chip">CSV · XLSX 작업 도구</span></nav>
+<main>
+<div class="hero">
+<p class="kicker">DATA WORKSPACE</p>
+<h1>엑셀 작업을<br>더 쉽고 빠르게.</h1>
+<p>여러 파일을 하나로 합치거나, 원하는 연도의 데이터만 추출하세요. 필요한 도구를 선택하면 해당 HTML 페이지로 바로 이동합니다.</p>
+</div>
+<section class="grid" aria-label="엑셀 도구 선택">
+<a class="tool" href="./excel_csv_merger_fin.html">
+<div class="tool-header">
+<div class="pic" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="3" y="5" width="13" height="17" rx="2"/><path d="M7 10h5M7 14h5M7 18h5"/><rect x="18" y="10" width="11" height="17" rx="2"/><path d="M21 15h5M21 19h5M21 23h5M13 25h4M15 23v4"/></svg></div>
+<span class="tag">TOOL 01</span>
+</div>
+<h2>엑셀 · CSV 파일 병합</h2>
+<p>여러 개의 CSV·XLSX 파일을 하나의 파일로 통합합니다. 열 이름 기준 병합과 대표도면 이미지 포함 XLSX 저장을 지원합니다.</p>
+<div class="features"><span>여러 파일 통합</span><span>열 이름 기준</span><span>이미지 보존</span></div>
+<div class="go"><span>병합기 실행</span><span class="arrow" aria-hidden="true">↗</span></div>
+</a>
+<a class="tool" href="./year_range_filter_fin.html">
+<div class="tool-header">
+<div class="pic green" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="4" y="5" width="24" height="23" rx="3"/><path d="M4 12h24M10 3v5M22 3v5M10 18h4M18 18h4M10 23h4M18 23h4"/></svg></div>
+<span class="tag">TOOL 02</span>
+</div>
+<h2>연도별 데이터 추출 · 분리</h2>
+<p>원하는 연도 또는 연도 범위에 해당하는 행만 추출합니다. 연도별 XLSX 개별 파일 및 ZIP 일괄 저장을 지원합니다.</p>
+<div class="features"><span>연도 범위 선택</span><span>연도별 ZIP</span><span>대표도면 포함</span></div>
+<div class="go"><span>연도 추출기 실행</span><span class="arrow" aria-hidden="true">↗</span></div>
+</a>
+</section>
+<aside class="bottom"><strong>사용 안내</strong> · <code>index.html</code>, <code>excel_csv_merger_fin.html</code>, <code>year_range_filter_fin.html</code> 세 파일을 <strong>같은 폴더</strong>에 넣어 주세요. <code>index.html</code>을 더블클릭하면 시작됩니다. 개별 도구의 외부 JavaScript 라이브러리를 불러오려면 인터넷 연결이 필요합니다. CSV에는 이미지를 저장할 수 없으므로 대표도면을 유지하려면 XLSX를 선택하세요.</aside>
+</main>
+<footer>Excel Studio · Browser-based Spreadsheet Tools</footer>
+</div>
+</body>
+</html>
